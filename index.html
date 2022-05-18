@@ -1,5 +1,21 @@
 <html>
-  <body>
-    <script src="functions.js"></script>
-  </body>
+<body>
+<script>
+function loadWasm(filename) { 
+  const importObject = {
+    env: {
+      __memory_base: 0,
+      __table_base: 0,
+      memory: new WebAssembly.Memory({initial: 1})
+    }
+  }
+
+  WebAssembly.instantiateStreaming(fetch(filename), importObject)
+    .then(obj => obj.instance.exports._Z9moranTestNSt3__26vectorIdNS_9allocatorIdEEEEPPd());
+};
+  
+loadWasm('functions.wasm')
+  
+</script>
+</body>
 </html>

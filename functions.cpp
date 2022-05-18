@@ -1,6 +1,6 @@
 
 #include <vector>
-#include <iostream>
+// #include <iostream>
 
 using std::vector;
 
@@ -55,7 +55,7 @@ vector<double> moranTest(vector<double> x, double **matrix) {
 }
 
 int main() {
-  std::cout << "Hello World" << std::endl;
+  // std::cout << "Hello World" << std::endl;
   vector<double> input;
   input.push_back(1.0);
   double **matrix;
@@ -64,6 +64,6 @@ int main() {
     matrix[i] = new double[10];
   }
   vector<double> results = moranTest(input, matrix);
-  std::cout << results.front() << std::endl;
+  // std::cout << results.front() << std::endl;
   return 0;
 }
