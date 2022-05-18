@@ -14,15 +14,6 @@ double* mean_centered(double x[], int n) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-int arpan_fib(int x) {
-  if (x < 1)
-    return 0;
-  if (x == 1)
-    return 1;
-  return arpan_fib(x-1)+arpan_fib(x-2);
-}
-
-EMSCRIPTEN_KEEPALIVE
 double* moranTest(double x[5], double weight[25]) {
   // double N = weight.n_rows;
   double N = 5;
