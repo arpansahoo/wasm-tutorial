@@ -1,21 +1,54 @@
 <html>
 <body>
-<script>
-function loadWasm(filename) { 
-  const importObject = {
-    env: {
-      __memory_base: 0,
-      __table_base: 0,
-      memory: new WebAssembly.Memory({initial: 1})
-    }
+
+  Neighbors matrix (5 x 5): <textarea type="text" name="a" id="a" cols="10" rows="5"></textarea><br> 
+  Gene vector (5 cells): <input type="text" name="b" id="b"><br>
+  <button onclick="moran_test(document.getElementById('a').value, document.getElementById('b').value)">Calculate</button><br><br>
+
+  <b>Moran's I: </b><p name="output" id="output"></p>
+
+  <script src="functions.js"></script>
+  <script>
+
+  c_array = (size) => {
+    const offset = Module._malloc(size * 8);
+    Module.HEAPF64.set(new Float64Array(size), offset / 8);
+    return {
+      "data": Module.HEAPF64.subarray(offset / 8, offset / 8 + size),
+      "offset": offset
+    };
   }
 
-  WebAssembly.instantiateStreaming(fetch(filename), importObject)
-    .then(obj => obj.instance.exports._Z9moranTestNSt3__26vectorIdNS_9allocatorIdEEEEPPd());
-};
+  moran_test = (a, b) => {
+    const input_mat = a.split("\n");
+    input_mat.forEach((row, i) => {
+      input_mat[i] = row.split(",").map(Number)
+    })
+    const input_vec = b.split(",").map(Number);
+
+
+    const vector = c_array(5); // {data: Float64Array(3), offset: 5247688}
+    for (let i = 0; i < 5; i++) {
+      Module.setValue(vector.offset + 8 * i, input_vec[i], 'double');
+    }
+
+    const matrix = c_array(25);
+    for (let i = 0; i < 25; i++) {
+      Module.setValue(matrix.offset + 8 * i, input_mat[Math.floor(i / 5)][i % 5], 'double');
+    }
+
+    const moran_test_wasm = Module.cwrap('_Z9moranTestPdS_', 'number', ['number', 'number']);
+    const ptr_from_wasm = moran_test_wasm(vector.offset, matrix.offset);
+    // const js_array = Module.HEAPF64.subarray(ptr_from_wasm / 8, ptr_from_wasm / 8 + 1);
+    // console.log(js_array);
+    I = Module.getValue(ptr_from_wasm, 'double');
+
+    const elem = document.getElementById('output');
+    const msg= `${I}`;
+    elem.innerHTML = msg;
+  }
+
+  </script>
   
-loadWasm('functions.wasm')
-  
-</script>
 </body>
 </html>

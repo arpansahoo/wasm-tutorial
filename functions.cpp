@@ -1,69 +1,66 @@
 
-#include <vector>
-// #include <iostream>
+#include <emscripten.h>
+#include <numeric>
 
-using std::vector;
+double* mean_centered(double x[], int n) {
+  double mean = std::accumulate(x, x + n, 0);
+  mean /= n;
 
-vector<double> moranTest(vector<double> x, double **matrix) {
+  double *z = new double[n];
+  for (int i = 0; i < n; i++) {
+    z[i] = x[i] - mean;
+  }
+  return z;
+}
+
+EMSCRIPTEN_KEEPALIVE
+int arpan_fib(int x) {
+  if (x < 1)
+    return 0;
+  if (x == 1)
+    return 1;
+  return arpan_fib(x-1)+arpan_fib(x-2);
+}
+
+EMSCRIPTEN_KEEPALIVE
+double* moranTest(double x[5], double weight[25]) {
   // double N = weight.n_rows;
+  double N = 5;
 
-  // // first moment
-  // double ei = -1/(N - 1);
+  // Moran's I
+  double W = std::accumulate(weight, weight + 25, 0);
+  double *z = mean_centered(x, 5);
 
-  // // unitization
-  // weight = unitize_C(weight);
+  double cv = 0;
+  for (int i = 0; i < 5; i++) {
+    for (int j = 0; j < 5; j++) {
+      cv += weight[i * 5 + j] * z[i] * z[j];
+    }
+  }
 
-  // // Moran's I
-  // double W = sum(sum(weight));
-  // arma::vec z = x - mean(x);
-  // double cv = sum(sum(weight % (z * z.t()))); // weight * (z %o% z)
-  // NumericVector zbar = wrap(z); // convert to numeric vector to use power
-  // double v = sum(pow(zbar, 2));
-  // double obs = (N/W) * (cv/v);
+  double v = 0;
+  for (int i = 0; i < 5; i++) {
+    v += z[i] * z[i];
+  }
 
-  // // second moment
-  // double Wsq = pow(W, 2);
-  // double Nsq = pow(N, 2);
-  // NumericMatrix wbar = wrap(weight + weight.t());
-  // arma::mat wbarbar = pow(wbar, 2);
-  // double S1 = 0.5 * sum(sum(wbarbar));
-  // arma::vec rs = conv_to<arma::vec>::from(sum(weight, 1));
-  // arma::vec cs = conv_to<arma::vec>::from(sum(weight, 0));
-  // arma::vec sg =  rs + cs;
-  // NumericVector sgbar = wrap(sg);
-  // arma::vec sbarbar = pow(sgbar, 2);
-  // double S2 = sum(sbarbar); //sg^2
-  // arma::vec zbarbar = pow(zbar, 4);
-  // double S3 = (sum(zbarbar)/N)/pow(v/N, 2);
-  // double S4 = (Nsq - 3*N + 3)*S1 - N*S2 + 3*Wsq;
-  // double S5 = (Nsq - N)*S1 - 2*N*S2 + 6*Wsq;
-  // double ei2 = (N*S4 - S3*S5)/((N - 1)*(N - 2)*(N - 3) * Wsq);
+  double obs = (N / W) * (cv / v);
 
-  // // standard deviation
-  // double sdi = sqrt(ei2 - pow(ei, 2));
-
-  // // return results as vector
-  // arma::vec results;
-  // results.set_size(3);
-  // results.at(0) = obs; // Moran's I
-  // results.at(1) = ei; // Expected
-  // results.at(2) = sdi; // SD
-
-  vector<double> results;
-  results.push_back(1);
+  // return results as vector
+  double *results = new double[10];
+  results[0] = obs; // Moran's I
   return results;
 }
 
 int main() {
-  // std::cout << "Hello World" << std::endl;
-  vector<double> input;
-  input.push_back(1.0);
-  double **matrix;
-  matrix = new double*[10];
-  for (int i = 0; i < 5; i++) {
-    matrix[i] = new double[10];
-  }
-  vector<double> results = moranTest(input, matrix);
-  // std::cout << results.front() << std::endl;
   return 0;
 }
+
+
+// 1,1,1,0,0
+// 1,1,1,0,0
+// 1,1,1,0,0
+// 0,0,0,0,0
+// 0,0,0,0,0
+
+// 50,50,50,5,5,5 (high Moran's I)
+// 50,5,5,50,5,50 (lower Moran's I)
